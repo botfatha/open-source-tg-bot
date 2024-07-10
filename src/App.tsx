@@ -38,9 +38,9 @@ const App: React.FC = () => {
   const pointsToAdd = 20;
   const profitPerHour = 5000;
 
-  const [dailyRewardTimeLeft, setDailyRewardTimeLeft] = useState("");
-  const [dailyCipherTimeLeft, setDailyCipherTimeLeft] = useState("");
-  const [dailyComboTimeLeft, setDailyComboTimeLeft] = useState("");
+ // const [dailyRewardTimeLeft, setDailyRewardTimeLeft] = useState("");
+ // const [dailyCipherTimeLeft, setDailyCipherTimeLeft] = useState("");
+ // const [dailyComboTimeLeft, setDailyComboTimeLeft] = useState("");
 
   const [maxEnergy] = useState(2500); // Set max energy to 2500
   const [currentEnergy, setCurrentEnergy] = useState(maxEnergy);
@@ -66,12 +66,12 @@ const App: React.FC = () => {
     return `${paddedHours}:${paddedMinutes}`;
   };
 
-  useEffect(() => {
-    const updateCountdowns = () => {
-      setDailyRewardTimeLeft(calculateTimeLeft(0));
-      setDailyCipherTimeLeft(calculateTimeLeft(19));
-      setDailyComboTimeLeft(calculateTimeLeft(12));
-    };
+ // useEffect(() => {
+ //   const updateCountdowns = () => {
+ //     setDailyRewardTimeLeft(calculateTimeLeft(0));
+ //     setDailyCipherTimeLeft(calculateTimeLeft(19));
+ //     setDailyComboTimeLeft(calculateTimeLeft(12));
+ //   };
 
     updateCountdowns();
     const interval = setInterval(updateCountdowns, 60000); // Update every minute
