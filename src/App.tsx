@@ -1,49 +1,55 @@
 import React, { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
+import UpgradePage from './UpgradePage';
 import './App.css';
 import Hamster from './icons/Hamster';
-import { binanceLogo, dailyCipher, dailyCombo, dailyReward, dollarCoin, hamsterCoin, mainCharacter } from './images';
+import { danceIcon, dollarCoin, inviteIcon, leaderboardIcon, mainCharacter, playIcon, walletIcon } from './images';
 import Info from './icons/Info';
-import Settings from './icons/Settings';
-import Mine from './icons/Mine';
-import Friends from './icons/Friends';
-import Coins from './icons/Coins';
+import SomeComponent from './SomeComponent'; // The component with the Upgrade button
+import './UpgradePage.css';
+
 
 const App: React.FC = () => {
   const levelNames = [
-    "Bronze",    // From 0 to 4999 coins
-    "Silver",    // From 5000 coins to 24,999 coins
-    "Gold",      // From 25,000 coins to 99,999 coins
-    "Platinum",  // From 100,000 coins to 999,999 coins
-    "Diamond",   // From 1,000,000 coins to 2,000,000 coins
-    "Epic",      // From 2,000,000 coins to 10,000,000 coins
-    "Legendary", // From 10,000,000 coins to 50,000,000 coins
-    "Master",    // From 50,000,000 coins to 100,000,000 coins
-    "GrandMaster", // From 100,000,000 coins to 1,000,000,000 coins
-    "Lord"       // From 1,000,000,000 coins to ∞
+    "Beginner",    // From 0 to 4999 coins
+    "Groover",    // From 5000 coins to 24,999 coins
+    "Mover",      // From 25,000 coins to 99,999 coins
+    "Performer",  // From 100,000 coins to 999,999 coins
+    "ChoreoGrapher",   // From 1,000,000 coins to 2,000,000 coins
+    "Star",      // From 2,000,000 coins to 10,000,000 coins
+    "Dance Pro", // From 10,000,000 coins to 50,000,000 coins
+    "Dance Master",    // From 50,000,000 coins to 100,000,000 coins
+    "Dance Legend", // From 100,000,000 coins to 1,000,000,000 coins
+    "Dance Icon"       // From 1,000,000,000 coins to ∞
   ];
 
   const levelMinPoints = [
-    0,        // Bronze
-    5000,     // Silver
-    25000,    // Gold
-    100000,   // Platinum
-    1000000,  // Diamond
-    2000000,  // Epic
-    10000000, // Legendary
-    50000000, // Master
-    100000000,// GrandMaster
-    1000000000// Lord
+    0,        // Beginner
+    5000,     // Groover
+    25000,    // Mover
+    100000,   // Performer
+    1000000,  // ChoreoGrapher
+    2000000,  // Star
+    10000000, // Dance Pro
+    50000000, // Dance Master
+    100000000,// Dance Legend
+    1000000000// Dance Icon
   ];
 
   const [levelIndex, setLevelIndex] = useState(6);
-  const [points, setPoints] = useState(22749365);
+  const [points, setPoints] = useState(0);
   const [clicks, setClicks] = useState<{ id: number, x: number, y: number }[]>([]);
-  const pointsToAdd = 11;
-  const profitPerHour = 126420;
+  const pointsToAdd = 1;
+  const profitPerHour = 0;
 
   const [dailyRewardTimeLeft, setDailyRewardTimeLeft] = useState("");
   const [dailyCipherTimeLeft, setDailyCipherTimeLeft] = useState("");
   const [dailyComboTimeLeft, setDailyComboTimeLeft] = useState("");
+
+  const [maxEnergy] = useState(2500); // Set max energy to 2500
+  const [currentEnergy, setCurrentEnergy] = useState(maxEnergy);
+
+
 
   const calculateTimeLeft = (targetHour: number) => {
     const now = new Date();
@@ -78,17 +84,25 @@ const App: React.FC = () => {
   }, []);
 
   const handleCardClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    const card = e.currentTarget;
-    const rect = card.getBoundingClientRect();
-    const x = e.clientX - rect.left - rect.width / 2;
-    const y = e.clientY - rect.top - rect.height / 2;
-    card.style.transform = `perspective(1000px) rotateX(${-y / 10}deg) rotateY(${x / 10}deg)`;
-    setTimeout(() => {
-      card.style.transform = '';
-    }, 100);
-
-    setPoints(points + pointsToAdd);
-    setClicks([...clicks, { id: Date.now(), x: e.pageX, y: e.pageY }]);
+    if (currentEnergy > 0) {
+      // Existing code for card animation
+      const card = e.currentTarget;
+      const rect = card.getBoundingClientRect();
+      const x = e.clientX - rect.left - rect.width / 2;
+      const y = e.clientY - rect.top - rect.height / 2;
+      card.style.transform = `perspective(1000px) rotateX(${-y / 10}deg) rotateY(${x / 10}deg)`;
+      setTimeout(() => {
+        card.style.transform = '';
+      }, 100);
+  
+      // Update points and energy
+      setPoints(points + pointsToAdd);
+      setCurrentEnergy(currentEnergy - 1);
+      setClicks([...clicks, { id: Date.now(), x: e.pageX, y: e.pageY }]);
+    } else {
+      // Display message indicating no energy
+      console.warn("Out of energy!"); // Or display a UI element
+    }
   };
 
   const handleAnimationEnd = (id: number) => {
@@ -108,6 +122,7 @@ const App: React.FC = () => {
   useEffect(() => {
     const currentLevelMin = levelMinPoints[levelIndex];
     const nextLevelMin = levelMinPoints[levelIndex + 1];
+    
     if (points >= nextLevelMin && levelIndex < levelNames.length - 1) {
       setLevelIndex(levelIndex + 1);
     } else if (points < currentLevelMin && levelIndex > 0) {
@@ -123,23 +138,35 @@ const App: React.FC = () => {
   };
 
   useEffect(() => {
+    const regenerateEnergy = () => {
+      const regenerationAmount = Math.min(2, maxEnergy - currentEnergy); // Max 2 regen per second
+      setCurrentEnergy(prevEnergy => Math.min(prevEnergy + regenerationAmount, maxEnergy));
+    };
+  
+    const intervalId = setInterval(regenerateEnergy, 1000); // Check every second
+  
+    // Update points per second based on profit per hour
     const pointsPerSecond = Math.floor(profitPerHour / 3600);
-    const interval = setInterval(() => {
+    const updatePoints = setInterval(() => {
       setPoints(prevPoints => prevPoints + pointsPerSecond);
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [profitPerHour]);
+    }, 60000); // Update points every minute
+  
+    return () => {
+      clearInterval(intervalId);
+      clearInterval(updatePoints);
+    };
+  }, [currentEnergy, maxEnergy, profitPerHour]);
 
   return (
-    <div className="bg-black flex justify-center">
-      <div className="w-full bg-black text-white h-screen font-bold flex flex-col max-w-xl">
-        <div className="px-4 z-10">
+    <div className="bodyy">
+      <div className="bodyy">
+        <div className="nav-top">
           <div className="flex items-center space-x-2 pt-4">
             <div className="p-1 rounded-lg bg-[#1d2025]">
-              <Hamster size={24} className="text-[#d4d4d4]" />
+              <Hamster size={24} className="text-[#fff]" />
             </div>
             <div>
-              <p className="text-sm">Nikandr (CEO)</p>
+              <p className="text-sm">Benny (CEO)</p>
             </div>
           </div>
           <div className="flex items-center justify-between space-x-4 mt-1">
@@ -156,88 +183,86 @@ const App: React.FC = () => {
                 </div>
               </div>
             </div>
-            <div className="flex items-center w-2/3 border-2 border-[#43433b] rounded-full px-4 py-[2px] bg-[#43433b]/[0.6] max-w-64">
-              <img src={binanceLogo} alt="Exchange" className="w-8 h-8" />
-              <div className="h-[32px] w-[2px] bg-[#43433b] mx-2"></div>
+            <div className="flex items-center w-2/3 border-2 border-[#43433b] px-4 py-[2px] bg-[#43433b]/[0.6] max-w-48">
+              
               <div className="flex-1 text-center">
                 <p className="text-xs text-[#85827d] font-medium">Profit per hour</p>
                 <div className="flex items-center justify-center space-x-1">
-                  <img src={dollarCoin} alt="Dollar Coin" className="w-[18px] h-[18px]" />
+                  <img src={dollarCoin} alt="Dollar Coin" className="w-[14px] h-[auto]" />
                   <p className="text-sm">{formatProfitPerHour(profitPerHour)}</p>
                   <Info size={20} className="text-[#43433b]" />
                 </div>
               </div>
-              <div className="h-[32px] w-[2px] bg-[#43433b] mx-2"></div>
-              <Settings className="text-white" />
+              
             </div>
           </div>
         </div>
 
-        <div className="flex-grow mt-4 bg-[#f3ba2f] rounded-t-[48px] relative top-glow z-0">
-          <div className="absolute top-[2px] left-0 right-0 bottom-0 bg-[#1d2025] rounded-t-[46px]">
-            <div className="px-4 mt-6 flex justify-between gap-2">
-              <div className="bg-[#272a2f] rounded-lg px-4 py-2 w-full relative">
-                <div className="dot"></div>
-                <img src={dailyReward} alt="Daily Reward" className="mx-auto w-12 h-12" />
-                <p className="text-[10px] text-center text-white mt-1">Daily reward</p>
-                <p className="text-[10px] font-medium text-center text-gray-400 mt-2">{dailyRewardTimeLeft}</p>
-              </div>
-              <div className="bg-[#272a2f] rounded-lg px-4 py-2 w-full relative">
-                <div className="dot"></div>
-                <img src={dailyCipher} alt="Daily Cipher" className="mx-auto w-12 h-12" />
-                <p className="text-[10px] text-center text-white mt-1">Daily cipher</p>
-                <p className="text-[10px] font-medium text-center text-gray-400 mt-2">{dailyCipherTimeLeft}</p>
-              </div>
-              <div className="bg-[#272a2f] rounded-lg px-4 py-2 w-full relative">
-                <div className="dot"></div>
-                <img src={dailyCombo} alt="Daily Combo" className="mx-auto w-12 h-12" />
-                <p className="text-[10px] text-center text-white mt-1">Daily combo</p>
-                <p className="text-[10px] font-medium text-center text-gray-400 mt-2">{dailyComboTimeLeft}</p>
-              </div>
+        <div className="mmmain-character-container">
+          <div className="mmain-character-container">
+            <div className="">
+              
             </div>
 
-            <div className="px-4 mt-4 flex justify-center">
-              <div className="px-4 py-2 flex items-center space-x-2">
-                <img src={dollarCoin} alt="Dollar Coin" className="w-10 h-10" />
-                <p className="text-4xl text-white">{points.toLocaleString()}</p>
-              </div>
-            </div>
+            
 
-            <div className="px-4 mt-4 flex justify-center">
+            <div className="main-character-container">
               <div
-                className="w-80 h-80 p-4 rounded-full circle-outer"
+                className="character-container"
                 onClick={handleCardClick}
               >
-                <div className="w-full h-full rounded-full circle-inner">
-                  <img src={mainCharacter} alt="Main Character" className="w-full h-full" />
+                <div className="character-container">
+                  <img src={mainCharacter} alt="Main Character" className="main-character" />
                 </div>
               </div>
             </div>
+            
           </div>
         </div>
       </div>
 
       {/* Bottom fixed div */}
-      <div className="fixed bottom-0 left-1/2 transform -translate-x-1/2 w-[calc(100%-2rem)] max-w-xl bg-[#272a2f] flex justify-around items-center z-50 rounded-3xl text-xs">
-        <div className="text-center text-[#85827d] w-1/5 bg-[#1c1f24] m-1 p-2 rounded-2xl">
-          <img src={binanceLogo} alt="Exchange" className="w-8 h-8 mx-auto" />
-          <p className="mt-1">Exchange</p>
-        </div>
-        <div className="text-center text-[#85827d] w-1/5">
-          <Mine className="w-8 h-8 mx-auto" />
-          <p className="mt-1">Mine</p>
-        </div>
-        <div className="text-center text-[#85827d] w-1/5">
-          <Friends className="w-8 h-8 mx-auto" />
-          <p className="mt-1">Friends</p>
-        </div>
-        <div className="text-center text-[#85827d] w-1/5">
-          <Coins className="w-8 h-8 mx-auto" />
+      <div className="Navs_container">
+      <div className="nav-bottom-enerymove">
+          <div className="nav-bottom-blue">
+            <p className="text-2xl text-white">{currentEnergy}/{maxEnergy}</p>
+            <div className="px-2 mt-1 flex justify-center">
+                <div className="px-4 py-2 flex items-center space-x-3">
+                  <img src={dollarCoin} alt="Dollar Coin" className="w-4 h-auto" />
+                  <p className="text-0.8xl text-white">Energy</p>
+                </div>
+              </div>
+          </div>
+          <div className="nav-bottom-pink">
+            <p className="text-2xl text-white">{points.toLocaleString()}</p>
+            <div className="px-2 mt-1 flex justify-center">
+                <div className="px-4 py-2 flex items-center space-x-3">
+                  <img src={dollarCoin} alt="Dollar Coin" className="w-4 h-auto" />
+                  <p className="text-0.7xl text-white">Dance Moves</p>
+                </div>
+              </div>
+          </div>
+      </div>
+      <div className="nav-bottom">
+        <div className="icon-nav-container">
+          <img src={walletIcon} alt="Exchange" className="icon-nav" />
           <p className="mt-1">Earn</p>
         </div>
-        <div className="text-center text-[#85827d] w-1/5">
-          <img src={hamsterCoin} alt="Airdrop" className="w-8 h-8 mx-auto" />
-          <p className="mt-1">Airdrop</p>
+        <div className="icon-nav-container">
+        <img src={danceIcon} alt="Exchange" className="icon-nav" />
+          <p className="mt-1">Upgrade</p>
+        </div>
+        <div className="icon-nav-container">
+        <img src={playIcon} alt="Exchange" className="icon-nav" />
+          <p className="mt-1">Play</p>
+        </div>
+        <div className="icon-nav-container">
+        <img src={leaderboardIcon} alt="Exchange" className="icon-nav" />
+          <p className="mt-1">Leaderboard</p>
+        </div>
+        <div className="icon-nav-container">
+          <img src={inviteIcon} alt="Airdrop" className="icon-nav" />
+          <p className="mt-1">Invite</p>
         </div>
       </div>
 
@@ -255,6 +280,7 @@ const App: React.FC = () => {
           {pointsToAdd}
         </div>
       ))}
+    </div>
     </div>
   );
 };
